@@ -7,7 +7,7 @@ const client = new net.Socket();
 
 client.connect(port, host, () => {
   console.log("Conncted");
-  client.write("From Client: Hellllooooooo");
+  client.write("From Client: Hellllooooooo_test");
 });
 
 client.on("data", (data) => {
