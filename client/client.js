@@ -1,16 +1,18 @@
 const net = require("net");
 
 const host = "127.0.0.1";
-const port = 4000;
+const port = 80;
 
 const client = new net.Socket();
 
 client.connect(port, host, () => {
   console.log("Conncted");
-  client.write("From Client: Hellllooooooo_test");
+
+  const request = "GET / HTTP/1.1\r\n" + `Host: ${host}\r\n`;
 });
 
 client.on("data", (data) => {
+  console.log("Response:");
   console.log(data.toString());
   client.end();
 });

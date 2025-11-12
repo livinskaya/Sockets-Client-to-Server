@@ -8,7 +8,12 @@ const server = net.createServer((socket) => {
 
   socket.on("data", (data) => {
     console.log(data.toString());
-    socket.write(data.toString());
+
+    const response =
+      "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nHello World";
+
+    socket.write(response);
+    socket.end();
   });
 
   socket.on("end", () => {
@@ -21,5 +26,5 @@ const server = net.createServer((socket) => {
 });
 
 server.listen(port, host, () => {
-  console.log(`Sever run ons: ${host}:${port}`);
+  console.log(`Sever run ons: http://${host}:${port}`);
 });
