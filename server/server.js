@@ -6,11 +6,23 @@ const port = 4000;
 const server = net.createServer((socket) => {
   console.log("Connected");
 
+  const htmlBody = `
+  <ul>
+    <li>hi</li>
+    <li>from</li>
+    <li>htlm</li>
+  </ul>
+  `;
+
   socket.on("data", (data) => {
     console.log(data.toString());
 
     const response =
-      "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nHello World";
+      "HTTP/1.1 200 OK\r\n" +
+      "Content-Type: text/html\r\n" +
+      "Connection: close\r\n" +
+      "\r\n" +
+      htmlBody;
 
     socket.write(response);
     socket.end();
