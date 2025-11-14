@@ -27,6 +27,21 @@ const server = net.createServer((socket) => {
       socket.write(`Connected Users: ${ulist}`);
       return;
     }
+
+    if (message.includes("/msg")) {
+      const user = message.split(" ")[2];
+      const privatmessage = message.slice(15 + user.length);
+
+      const target = clients.find((c) => c.username === user);
+
+      if (!target) {
+        socket.write("Der User konnte nicht gefunden werden");
+      }
+
+      target.write(`[PRIVATE von ${socket.username}]: ${privatmessage}`);
+      socket.write(`[PRIVATE an ${user}]`);
+      return;
+    }
     for (const client of clients) {
       if (client !== socket) {
         client.write(message);
