@@ -5,9 +5,13 @@ const port = 4000;
 
 const clients = [];
 
+function uniqueName(standardName) {
+  const tag = Math.floor(1000 + Math.random() * 9000);
+  return `${standardName}#${tag}`;
+}
+
 const server = net.createServer((socket) => {
   socket.write("Welcome to the Server!");
-  clients.push(socket);
 
   socket.on("data", (data) => {
     const message = data.toString().trim();
@@ -18,7 +22,11 @@ const server = net.createServer((socket) => {
         message.startsWith("user: ") &&
         message.includes("hat sich verbunden")
       ) {
-        socket.username = message.split(" ")[1];
+        const reqname = message.split(" ")[1];
+        socket.username = uniqueName(reqname);
+        clients.push(socket);
+        socket.write(`Dein Name lautet: ${socket.username}`);
+        return;
       }
     }
 
@@ -28,14 +36,25 @@ const server = net.createServer((socket) => {
       return;
     }
 
+    if (message.includes("/group")) {
+      if (message.includes("/add")) {
+      }
+      if (message.includes("/leave")) {
+      }
+      if (message.includes("/member")) {
+      }
+    }
+
     if (message.includes("/msg")) {
-      const user = message.split(" ")[2];
-      const privatmessage = message.slice(15 + user.length);
+      const parts = message.split(" ");
+      const user = parts[1];
+      const privatmessage = parts.slice(2).join(" ");
 
       const target = clients.find((c) => c.username === user);
 
       if (!target) {
         socket.write("Der User konnte nicht gefunden werden");
+        return;
       }
 
       target.write(`[PRIVATE von ${socket.username}]: ${privatmessage}`);
@@ -44,7 +63,7 @@ const server = net.createServer((socket) => {
     }
     for (const client of clients) {
       if (client !== socket) {
-        client.write(message);
+        client.write(`[${socket.username}]: ${message}`);
       }
     }
   });
@@ -52,7 +71,7 @@ const server = net.createServer((socket) => {
   socket.on("end", () => {
     console.log("Disconnected");
     const index = clients.indexOf(socket);
-    if (index !== 1) clients.splice(index, 1);
+    if (index !== -1) clients.splice(index, 1);
   });
 
   socket.on("error", (err) => {

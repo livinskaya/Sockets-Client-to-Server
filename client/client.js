@@ -1,7 +1,7 @@
 const net = require("net");
 const readline = require("node:readline");
 
-const username = process.argv[2] || "Unbekannt";
+let username = process.argv[2] || "Unbekannt";
 const host = "127.0.0.1";
 const port = 4000;
 
@@ -18,17 +18,24 @@ client.connect(port, host, () => {
 });
 
 client.on("data", (data) => {
-  console.log(data.toString());
+  const msg = data.toString();
+  if (msg.startsWith("Dein name lautet:")) {
+    const newName = msg.split(":")[1].trim();
+    console.log(`Dein Server name${newName}`);
+    username = newName;
+  }
+
+  console.log(msg.trim());
   rl.prompt(true);
 });
 
 rl.on("line", (input) => {
   if (input.toLocaleLowerCase() === "/exit") {
     console.log("Verbindung geschlossen");
-    client.end;
+    client.end();
     rl.close();
   } else {
-    client.write(`[${username}]: ${input}`);
+    client.write(input);
   }
 });
 
