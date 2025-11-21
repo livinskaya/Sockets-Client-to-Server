@@ -4,6 +4,7 @@ const host = "127.0.0.1";
 const port = 4000;
 
 const clients = [];
+const groups = {};
 
 function uniqueName(standardName) {
   const tag = Math.floor(1000 + Math.random() * 9000);
@@ -37,12 +38,68 @@ const server = net.createServer((socket) => {
     }
 
     if (message.includes("/group")) {
-      if (message.includes("/add")) {
+      const parts = message.split(" ");
+      const grName = parts[1];
+      if (!grName) {
+        socket.write("Schreibweise: /group [gruppenname]");
+        return;
       }
-      if (message.includes("/leave")) {
+      if (!groups[grName]) {
+        groups[grName] = new Set();
       }
-      if (message.includes("/member")) {
+      groups[grName].add(socket);
+      socket.currentGroup = grName;
+
+      socket.write(`Du bist jetzt in Gruppe: ${grName}`);
+      return;
+    }
+    if (message.includes("/add")) {
+      if (!socket.currentGroup) {
+        socket.write("du bist in keine gruppe");
+        return;
       }
+      const targetName = message.split(" ")[1];
+      if (!targetName) {
+        socket.write("Schreibweise: /add [username]");
+      }
+      const target = clients.find((c) => c.username === targetName);
+      if (!target) {
+        socket.write("user gibts nicht");
+        return;
+      }
+      const group = socket.currentGroup;
+      if (!groups[group]) groups[group] = new Set();
+      groups[group].add(target);
+      target.currentGroup = group;
+      target.write(`Du bist nun in der Gruppe ${group} drin`);
+      socket.write(`${targetName} ist nun teil der gruppe`);
+      return;
+    }
+    if (message.includes("leave")) {
+      if (!socket.currentGroup) {
+        socket.write("Du bist in keiner gruppe");
+        return;
+      }
+      const g = socket.currentGroup;
+      if (groups[group]) groups[group].delete(scoket);
+      socket.currentGroup = null;
+    }
+    if (message.includes("/member")) {
+      if (!socket.currentGroup) {
+        socket.write("du bist in kiner gruppe");
+        return;
+      }
+      const grSet = groups[socket.currentGroup];
+      if (!grSet) {
+        socket.write("gruppe gibt es nicht");
+        return;
+      }
+
+      const members = [...groups[socket.currentGroup]]
+        .map((s) => s.username)
+        .join(", ");
+      socket.write(`Members: ${socket.currentGroup}: ${members}`);
+      return;
     }
 
     if (message.includes("/msg")) {
@@ -61,6 +118,16 @@ const server = net.createServer((socket) => {
       socket.write(`[PRIVATE an ${user}]`);
       return;
     }
+
+    if (socket.currentGroup) {
+      const group = socket.currentGroup;
+      for (const member of groups[group]) {
+        if (member !== socket) {
+          member.write(`[${group}] [${socket.username}]: ${message}`);
+        }
+      }
+    }
+
     for (const client of clients) {
       if (client !== socket) {
         client.write(`[${socket.username}]: ${message}`);
