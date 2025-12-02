@@ -83,6 +83,9 @@ const server = net.createServer((socket) => {
       const g = socket.currentGroup;
       if (groups[group]) groups[group].delete(scoket);
       socket.currentGroup = null;
+      socket.wirte("du hast die gruppe verlassen");
+      if (groups[group] && groups[group].size === 0) delete groups[group];
+      return;
     }
     if (message.includes("/member")) {
       if (!socket.currentGroup) {
@@ -139,6 +142,10 @@ const server = net.createServer((socket) => {
     console.log("Disconnected");
     const index = clients.indexOf(socket);
     if (index !== -1) clients.splice(index, 1);
+    for (const name of Object.keys(groups)) {
+      groups[name].delete(socket);
+      if (groups[name].size === 0) delete groups[name];
+    }
   });
 
   socket.on("error", (err) => {
